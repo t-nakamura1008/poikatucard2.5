@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<style>
+body{
+    font-family: sans-serif;
+    background:#f5f5f5;
+    padding:20px;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.15);
+}
+
+h1{
+    text-align:center;
+    color:#008a5a;
+}
+
+label{
+    display:block;
+    margin-top:15px;
+    font-weight:bold;
+}
+
+input{
+  select{
+    width:100%;
+    padding:12px;
+    margin-top:5px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    box-sizing:border-box;
+}
+    width:100%;
+    padding:10px;
+    box-sizing:border-box;
+    margin-top:5px;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    margin-top:20px;
+    border:2px solid #008a5a;
+    background:white;
+    color:#008a5a;
+    border-radius:8px;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.result{
+    margin-top:25px;
+    padding:20px;
+    background:#fafafa;
+    border-radius:12px;
+}
+
+.total{
+    color:#008a5a;
+    font-size:24px;
+    font-weight:bold;
+}
+
+@media print{
+    input,
+    button,
+    label{
+        display:none;
+    }
+
+    body{
+        background:white;
+    }
+
+    .card{
+        box-shadow:none;
+    }
+}
+.celebration{
+    background:#fff8d8;
+    border:2px solid #ffd700;
+    border-radius:12px;
+    padding:20px;
+    margin-top:20px;
+    text-align:center;
+    font-size:20px;
+    font-weight:bold;
+    animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+    0%{
+        transform:scale(1);
+    }
+
+    50%{
+        transform:scale(1.03);
+    }
+
+    100%{
+        transform:scale(1);
+    }
+}
+</style>
+
+</head>
+
+<body>
+<label>カード種類</label>
+
+<select id="cardType">
+    <option value="platinum">
+        dカード PLATINUM
+    </option>
+
+    <option value="gold">
+        dカード GOLD
+    </option>
+</select>
+
+<div class="container">
+
+<div class="card">
+
+<h1>dカード ポイ活シミュレーター</h1>
+
+<label>月々の携帯料金（税込）</label>
+<input type="number" id="mobile" value="12000">
+
+<label>月々のドコモ光料金（税込）</label>
+<input type="number" id="hikari" value="5720">
+
+<label>月々のドコモでんき料金（税込）</label>
+<input type="number" id="denki" value="8000">
+
+<label>月々のお買い物料金（税込）</label>
+<input type="number" id="shopping" value="50000">
+
+<label>ポイ活ファミリー特典回線数</label>
+<input type="number" id="family" value="4">
+
+<button onclick="calculate()">
+シミュレーションする
+</button>
+
+<div id="result" class="result"></div>
+
+</div>
+
+</div>
+
+<script>
+
+function calculate(){
+
+const mobile = Number(document.getElementById("mobile").value) || 0;
+const hikari = Number(document.getElementById("hikari").value) || 0;
+const denki = Number(document.getElementById("denki").value) || 0;
+const shopping = Number(document.getElementById("shopping").value) || 0;
+const family = Number(document.getElementById("family").value) || 0;
+
+const cardType =
+document.getElementById("cardType").value;
+/* 倍率判定 */
+let multiplier = 10;
+
+if(cardType === "platinum"){
+
+    const rankAmount =
+    mobile +
+    hikari +
+    denki +
+    shopping;
+
+    if(rankAmount >= 200000){
+
+        multiplier = 20;
+
+    }
+    else if(rankAmount >= 100000){
+
+        multiplier = 15;
+
+    }
+
+}
+else{
+
+    multiplier = 10;
+
+}
+
+/* ドコモ関連ポイント
+   税込入力 → 税抜計算
+   1000円につき10pt
+   倍率適用
+*/
+
+const mobilePoint =
+Math.floor((mobile / 1.1) / 1000) * 10 * multiplier;
+
+const hikariPoint =
+Math.round((hikari / 1.1) / 1000) * 10 * multiplier;
+
+const denkiPoint =
+Math.round((denki / 1.1) / 1000) * 10 * multiplier;
+
+
+/* ショッピングポイント
+   5万円まで11%
+   超過分1%
+*/
+
+let shoppingPoint = 0;
+
+if(cardType === "gold"){
+
+    if(shopping <= 100000){
+
+        shoppingPoint =
+        shopping * 0.06;
+
+    }
+    else{
+
+        shoppingPoint =
+        (100000 * 0.06)
+        +
+        ((shopping - 100000) * 0.01);
+
+    }
+
+}
+else{
+
+    if(shopping <= 50000){
+
+        shoppingPoint =
+        shopping * 0.11;
+
+    }
+    else{
+
+        shoppingPoint =
+        (50000 * 0.11)
+        +
+        ((shopping - 50000) * 0.01);
+
+    }
+
+}
+
+/* ファミリー特典 */
+
+let familyPoint = 0;
+
+if(family >= 2){
+
+    if(cardType === "gold"){
+
+        familyPoint =
+        family * 100;
+
+    }
+    else{
+
+        familyPoint =
+        family * 300;
+
+    }
+
+}
+
+/* 月間合計 */
+
+const monthlyTotal =
+
+mobilePoint +
+hikariPoint +
+denkiPoint +
+shoppingPoint +
+familyPoint;
+
+/* 年間合計 */
+
+const yearlyTotal =
+monthlyTotal * 12;
+
+/* 年間利用額 */
+
+const yearlyUsage =
+
+(
+mobile +
+hikari +
+denki +
+shopping
+) * 12;
+/* クーポン */
+
+let coupon = 0;
+let nextTarget = 1000000;
+
+if(cardType === "gold"){
+
+    if(yearlyUsage >= 1000000){
+
+        coupon = 10000;
+        nextTarget = yearlyUsage;
+
+    }
+
+}
+else{
+
+    if(yearlyUsage >= 4000000){
+
+        coupon = 40000;
+        nextTarget = yearlyUsage;
+
+    }
+    else if(yearlyUsage >= 3000000){
+
+        coupon = 30000;
+        nextTarget = 4000000;
+
+    }
+    else if(yearlyUsage >= 2000000){
+
+        coupon = 20000;
+        nextTarget = 3000000;
+
+    }
+    else if(yearlyUsage >= 1000000){
+
+        coupon = 10000;
+        nextTarget = 2000000;
+
+    }
+
+}
+
+Math.max(nextTarget - yearlyUsage,0);
+const annualFee =
+
+cardType === "gold"
+? 11000
+: 29700;
+const totalBenefit =
+yearlyTotal +
+coupon;
+
+const actualBenefit =
+totalBenefit - annualFee;
+/* クラッカー */
+
+let celebration = "";
+
+let nextMessage =
+cardType === "gold"
+? "GOLDカードの年間利用特典は達成済みです"
+: `次の特典まであと<br>${remain.toLocaleString()}円`;
+
+if(coupon > 0){
+
+celebration = `
+<div class="celebration">
+
+🎉
+
+<br><br>
+
+年間利用特典達成！
+
+<br><br>
+
+<strong>
+${coupon.toLocaleString()}円クーポン獲得予定
+</strong>
+
+<br><br>
+
+${nextMessage}
+
+</div>
+`;
+
+}
+
+/* 表示 */
+
+document.getElementById("result").innerHTML = `
+
+<h2>月間ポイント</h2>
+
+<p class="total">
+
+カード種類：
+
+${cardType === "gold"
+? "dカード GOLD"
+: "dカード PLATINUM"}
+
+</p>
+<p class="total">
+現在の倍率：${multiplier}倍
+</p>
+
+<p>携帯料金ポイント：${mobilePoint.toLocaleString()}pt</p>
+
+<p>ドコモ光ポイント：${hikariPoint.toLocaleString()}pt</p>
+
+<p>ドコモでんきポイント：${denkiPoint.toLocaleString()}pt</p>
+
+<p>ショッピングポイント：${Math.round(shoppingPoint).toLocaleString()}pt</p>
+
+<p>ファミリー特典：${familyPoint.toLocaleString()}pt</p>
+
+<p class="total">
+月間合計：${Math.round(monthlyTotal).toLocaleString()}pt
+</p>
+
+<hr>
+
+<h2>年間ポイント</h2>
+
+<p>携帯料金ポイント：${(mobilePoint * 12).toLocaleString()}pt</p>
+
+<p>ドコモ光ポイント：${(hikariPoint * 12).toLocaleString()}pt</p>
+
+<p>ドコモでんきポイント：${(denkiPoint * 12).toLocaleString()}pt</p>
+
+<p>ショッピングポイント：${Math.round(shoppingPoint * 12).toLocaleString()}pt</p>
+
+<p>ファミリー特典：${(familyPoint * 12).toLocaleString()}pt</p>
+
+<p class="total">
+年間合計：${Math.round(yearlyTotal).toLocaleString()}pt
+</p>
+
+<hr>
+
+<h2>年間利用額特典</h2>
+
+<p>
+年間利用額：
+${yearlyUsage.toLocaleString()}円
+</p>
+
+<p>
+獲得予定クーポン：
+${coupon.toLocaleString()}円
+</p>
+
+<p>
+次回特典まで：
+${remain.toLocaleString()}円
+</p>
+<hr>
+
+<h2>実質お得額</h2>
+
+<p>
+年間ポイント価値：
+${Math.round(yearlyTotal).toLocaleString()}円
+</p>
+
+<p>
+年間利用特典クーポン：
+${coupon.toLocaleString()}円
+</p>
+
+<p>
+年会費：
+▲${annualFee.toLocaleString()}円
+</p>
+
+<p class="total">
+実質お得額：
+${Math.round(actualBenefit).toLocaleString()}円
+</p>
+
+
+${celebration}
+
+`;
+
+}
+
+calculate();
+
+</script>
+
+</body>
